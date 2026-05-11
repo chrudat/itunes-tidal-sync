@@ -2,34 +2,35 @@ name: Weekly iTunes Email
 
 on:
   schedule:
-    - cron: '0 8 * * 1'
-  workflow_dispatch:
+    - cron: '0 8 * * 1' # Jeden Montag um 08:00 UTC (09:00 oder 10:00 Uhr dt. Zeit)
+  workflow_dispatch: # Erlaubt manuelles Starten zum Testen
 
 jobs:
   build_and_mail:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Get Charts
-        run: |
-          pip install requests
-          python update_charts.py
+      - name: Install Requests
+        run: pip install requests
 
-      - name: Send mail
+      - name: Generate Charts File
+        run: python update_charts.py
+
+      - name: Send Mail
         uses: dawidd6/action-send-mail@v3
         with:
-          # SMTP-Server deines Anbieters (z.B. smtp.gmail.com oder mail.gmx.net)
           server_address: ${{ secrets.MAIL_SERVER }}
           server_port: 465
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          subject: "🎵 Deine iTunes Top 10"
-          to: "DEINE_ZIEL_EMAIL@beispiel.de"
+          subject: "🎵 Deine iTunes Top 10 Charts"
+          to: "sutadur@gmx.de" # <--- HIER DEINE ADRESSE EINTRAGEN
           from: "GitHub Chart Bot"
           body: file://charts.txt
