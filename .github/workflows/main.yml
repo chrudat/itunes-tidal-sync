@@ -2,20 +2,23 @@ name: Weekly iTunes Update
 
 on:
   schedule:
-    - cron: '0 8 * * 1' # Jeden Montag um 08:00 UTC
-  workflow_dispatch: # Ermöglicht manuelles Starten zum Testen
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   run_sync:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Update auf v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # Update auf v5
         with:
-          python-version: '3.9'
+          python-version: '3.11'
 
       - name: Install Dependencies
         run: pip install gspread oauth2client requests
