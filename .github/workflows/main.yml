@@ -1,0 +1,26 @@
+name: Weekly iTunes Update
+
+on:
+  schedule:
+    - cron: '0 8 * * 1' # Jeden Montag um 08:00 UTC
+  workflow_dispatch: # Ermöglicht manuelles Starten zum Testen
+
+jobs:
+  run_sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: pip install gspread oauth2client requests
+
+      - name: Execute Script
+        env:
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        run: python update_charts.py
