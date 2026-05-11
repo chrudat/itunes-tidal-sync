@@ -56,3 +56,16 @@ if __name__ == "__main__":
         upload_to_drive(charts_text)
     except Exception as e:
         print(f"Fehler: {e}")
+
+# Nach dem Erstellen/Update: Explizite Freigabe für DICH
+    # Ersetze DEINE_GMAIL_ADRESSE durch deine echte E-Mail
+    user_permission = {
+        'type': 'user',
+        'role': 'writer',
+        'emailAddress': 'sutadur@gmail.com'
+    }
+    service.permissions().create(
+        fileId=file_id if 'file_id' in locals() else results.get('id'), # ID der neuen oder existierenden Datei
+        body=user_permission,
+        fields='id',
+    ).execute()
