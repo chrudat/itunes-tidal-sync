@@ -1,35 +1,35 @@
-name: Weekly iTunes Update
+name: Weekly iTunes Email
 
 on:
   schedule:
     - cron: '0 8 * * 1'
   workflow_dispatch:
 
-permissions:
-  contents: write  # Wichtig, damit GitHub die Datei speichern darf
-
 jobs:
-  run_sync:
+  build_and_mail:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install Dependencies
-        run: pip install google-api-python-client google-auth google-auth-oauthlib google-auth-httplib2 requests
-
-      - name: Execute Script
-        run: python update_charts.py
-
-      - name: Commit and Push changes
+      - name: Get Charts
         run: |
-          git config --global user.name "Chart Bot"
-          git config --global user.email "bot@github.com"
-          git add itunes_charts.csv
-          git commit -m "Update iTunes Charts CSV" || exit 0
-          git push
+          pip install requests
+          python update_charts.py
+
+      - name: Send mail
+        uses: dawidd6/action-send-mail@v3
+        with:
+          # SMTP-Server deines Anbieters (z.B. smtp.gmail.com oder mail.gmx.net)
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: 465
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "🎵 Deine iTunes Top 10"
+          to: "DEINE_ZIEL_EMAIL@beispiel.de"
+          from: "GitHub Chart Bot"
+          body: file://charts.txt
