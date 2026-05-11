@@ -25,7 +25,7 @@ def update_sheet():
 
         # iTunes Daten holen
         print("Hole Daten von Apple...")
-        url = "https://rss.marketingtools.apple.com/api/v2/de/music/most-played/10/songs.json"
+        url = "https://rss.marketingtools.apple.com/api/v2/de/music/most-purchased/10/songs.json"
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
