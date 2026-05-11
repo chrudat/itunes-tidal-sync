@@ -21,7 +21,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install Dependencies
-        run: pip install requests
+        run: pip install google-api-python-client google-auth google-auth-oauthlib google-auth-httplib2 requests
 
       - name: Execute Script
         run: python update_charts.py
