@@ -14,7 +14,7 @@ client = gspread.authorize(creds)
 sheet = client.open("iTunes_Tidal_Sync").worksheet("Charts")
 
 def get_itunes_top_10():
-    url = "https://rss.marketingtools.apple.com/api/v2/de/music/most-played/10/songs.json"
+    url = "https://rss.marketingtools.apple.com/api/v2/de/music/most-purchased/10/songs.json"
     response = requests.get(url)
     data = response.json()
     
