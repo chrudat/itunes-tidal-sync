@@ -5,25 +5,31 @@ on:
     - cron: '0 8 * * 1'
   workflow_dispatch:
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+permissions:
+  contents: write  # Wichtig, damit GitHub die Datei speichern darf
 
 jobs:
   run_sync:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4 # Update auf v4
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5 # Update auf v5
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Install Dependencies
-        run: pip install gspread oauth2client requests
+        run: pip install requests
 
       - name: Execute Script
-        env:
-          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
         run: python update_charts.py
+
+      - name: Commit and Push changes
+        run: |
+          git config --global user.name "Chart Bot"
+          git config --global user.email "bot@github.com"
+          git add itunes_charts.csv
+          git commit -m "Update iTunes Charts CSV" || exit 0
+          git push
