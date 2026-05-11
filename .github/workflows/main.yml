@@ -2,8 +2,12 @@ name: Weekly iTunes Email
 
 on:
   schedule:
-    - cron: '0 8 * * 1' # Jeden Montag um 08:00 UTC (09:00 oder 10:00 Uhr dt. Zeit)
-  workflow_dispatch: # Erlaubt manuelles Starten zum Testen
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+
+# Diese Variable stellt sicher, dass GitHub den neuesten Motor (Node 24) nutzt
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build_and_mail:
@@ -24,13 +28,14 @@ jobs:
         run: python update_charts.py
 
       - name: Send Mail
-        uses: dawidd6/action-send-mail@v3
+        # Hier nutzen wir v4 statt v3 für bessere Kompatibilität
+        uses: dawidd6/action-send-mail@v4
         with:
           server_address: ${{ secrets.MAIL_SERVER }}
           server_port: 465
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
           subject: "🎵 Deine iTunes Top 10 Charts"
-          to: "sutadur@gmail.com" # <--- HIER DEINE ADRESSE EINTRAGEN
+          to: "sutadur@gmail.com"
           from: "GitHub Chart Bot"
           body: file://charts.txt
