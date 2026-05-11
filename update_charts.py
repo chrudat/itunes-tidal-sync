@@ -6,6 +6,9 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 import io
 
+# TRAGE HIER DEINE ORDNER-ID EIN:
+FOLDER_ID = "1kUM9c15HTv6-hbF-pSQ3bZ6NCftcu9u8"
+
 def get_itunes_top_10():
     url = "https://itunes.apple.com/de/rss/topsongs/limit=10/json"
     response = requests.get(url)
@@ -27,23 +30,25 @@ def upload_to_drive(content):
 
     file_name = "itunes_charts.txt"
     
-    # Suche, ob die Datei schon existiert
-    results = service.files().list(q=f"name='{file_name}'", fields="files(id)").execute()
+    # Suche die Datei explizit in deinem Ordner
+    query = f"name='{file_name}' and '{FOLDER_ID}' in parents and trashed=false"
+    results = service.files().list(q=query, fields="files(id)").execute()
     files = results.get('files', [])
 
     fh = io.BytesIO(content.encode('utf-8'))
     media = MediaIoBaseUpload(fh, mimetype='text/plain')
 
     if files:
-        # Update bestehende Datei
         file_id = files[0]['id']
         service.files().update(fileId=file_id, media_body=media).execute()
-        print(f"Datei '{file_name}' wurde aktualisiert.")
+        print(f"Datei '{file_name}' in Ordner aktualisiert.")
     else:
-        # Erstelle neue Datei
-        file_metadata = {'name': file_name}
+        file_metadata = {
+            'name': file_name,
+            'parents': [FOLDER_ID] # Hier wird die Quota deines Accounts genutzt!
+        }
         service.files().create(body=file_metadata, media_body=media, fields='id').execute()
-        print(f"Datei '{file_name}' wurde neu erstellt.")
+        print(f"Datei '{file_name}' wurde neu im Zielordner erstellt.")
 
 if __name__ == "__main__":
     try:
