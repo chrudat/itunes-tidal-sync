@@ -31,6 +31,6 @@ jobs:
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
           subject: "🎵 Deine iTunes Top 10 Charts"
-          to: "sutadur@gmx.de" # <--- HIER DEINE ADRESSE EINTRAGEN
+          to: "sutadur@gmail.com" # <--- HIER DEINE ADRESSE EINTRAGEN
           from: "GitHub Chart Bot"
           body: file://charts.txt
