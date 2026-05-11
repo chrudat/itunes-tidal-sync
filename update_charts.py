@@ -1,78 +1,53 @@
 import os
 import json
 import requests
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseUpload
+import io
 
 def get_itunes_top_10():
-    """Holt die echten iTunes Verkaufscharts (Top 10 Songs Deutschland)."""
-    print("Hole Daten von den iTunes Verkaufscharts...")
-    # Klassischer RSS Feed für den iTunes Store Deutschland
     url = "https://itunes.apple.com/de/rss/topsongs/limit=10/json"
-    
     response = requests.get(url)
     response.raise_for_status()
     data = response.json()
     
-    rows = []
-    # Navigation durch die JSON-Struktur des klassischen Feeds
+    lines = []
     entries = data.get('feed', {}).get('entry', [])
-    
     for song in entries:
-        title = song.get('im:name', {}).get('label', 'Unbekannter Titel')
-        artist = song.get('im:artist', {}).get('label', 'Unbekannter Interpret')
-        rows.append([title, artist])
+        title = song.get('im:name', {}).get('label')
+        artist = song.get('im:artist', {}).get('label')
+        lines.append(f"{title} - {artist}")
+    return "\n".join(lines)
+
+def upload_to_drive(content):
+    creds_info = json.loads(os.environ['GOOGLE_CREDENTIALS'])
+    creds = service_account.Credentials.from_service_account_info(creds_info)
+    service = build('drive', 'v3', credentials=creds)
+
+    file_name = "itunes_charts.txt"
     
-    return rows
+    # Suche, ob die Datei schon existiert
+    results = service.files().list(q=f"name='{file_name}'", fields="files(id)").execute()
+    files = results.get('files', [])
 
-def update_sheet():
-    try:
-        # 1. API Setup & Authentifizierung
-        scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        
-        if 'GOOGLE_CREDENTIALS' not in os.environ:
-            print("FEHLER: GitHub Secret 'GOOGLE_CREDENTIALS' nicht gefunden!")
-            return
+    fh = io.BytesIO(content.encode('utf-8'))
+    media = MediaIoBaseUpload(fh, mimetype='text/plain')
 
-        creds_info = json.loads(os.environ['GOOGLE_CREDENTIALS'])
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_info, scope)
-        client = gspread.authorize(creds)
-
-        # 2. Sheet öffnen
-        # WICHTIG: Name der Datei und des Tabellenblatts müssen exakt stimmen
-        spreadsheet_name = "iTunes_Tidal_Sync"
-        worksheet_name = "Charts"
-        
-        print(f"Öffne Google Sheet '{spreadsheet_name}'...")
-        spreadsheet = client.open(spreadsheet_name)
-        sheet = spreadsheet.worksheet(worksheet_name)
-
-        # 3. Daten abrufen
-        new_tracks = get_itunes_top_10()
-        
-        if not new_tracks:
-            print("Keine Daten gefunden. Abbruch.")
-            return
-
-        # 4. Sheet aktualisieren
-        print(f"Schreibe {len(new_tracks)} Titel in das Sheet...")
-        
-        # Wir leeren zuerst den Bereich A1:B10, um Platz für neue Daten zu schaffen
-        # Dann schreiben wir die neuen 10 Zeilen hinein
-        sheet.update('A1:B10', new_tracks)
-        
-        print("---")
-        for i, track in enumerate(new_tracks, 1):
-            print(f"{i}. {track[0]} - {track[1]}")
-        print("---")
-        print("Erfolg! Google Sheet wurde aktualisiert.")
-
-    except gspread.exceptions.SpreadsheetNotFound:
-        print(f"FEHLER: Die Datei '{spreadsheet_name}' wurde nicht gefunden.")
-    except gspread.exceptions.WorksheetNotFound:
-        print(f"FEHLER: Das Tabellenblatt '{worksheet_name}' wurde nicht gefunden.")
-    except Exception as e:
-        print(f"Ein unerwarteter Fehler ist aufgetreten: {e}")
+    if files:
+        # Update bestehende Datei
+        file_id = files[0]['id']
+        service.files().update(fileId=file_id, media_body=media).execute()
+        print(f"Datei '{file_name}' wurde aktualisiert.")
+    else:
+        # Erstelle neue Datei
+        file_metadata = {'name': file_name}
+        service.files().create(body=file_metadata, media_body=media, fields='id').execute()
+        print(f"Datei '{file_name}' wurde neu erstellt.")
 
 if __name__ == "__main__":
-    update_sheet()
+    try:
+        charts_text = get_itunes_top_10()
+        upload_to_drive(charts_text)
+    except Exception as e:
+        print(f"Fehler: {e}")
