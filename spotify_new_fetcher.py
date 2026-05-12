@@ -1,8 +1,8 @@
 import os
 import spotipy
-from spotipy.oauth2 import SpotifyOAuth
+from spotipy.oauth2 import SpotifyClientCredentials
 
-# Deine 5 "New" Playlists (IDs hier eintragen)
+# Die IDs der "New" Playlists
 NEW_PLAYLISTS = {
     "New Releases 1": "63oguNCuwz51He8oxXdP58",
     "New Releases 2": "15IEm4WquzW48cFgtb7Ym7",
@@ -12,35 +12,28 @@ NEW_PLAYLISTS = {
 }
 
 def fetch_spotify_group(playlists):
-    client_id = os.environ.get('SPOTIPY_CLIENT_ID')
-    client_secret = os.environ.get('SPOTIPY_CLIENT_SECRET')
-    refresh_token = os.environ.get('SPOTIPY_REFRESH_TOKEN')
+    client_id = os.environ.get('SPOTIPY_CLIENT_ID', '').strip()
+    client_secret = os.environ.get('SPOTIPY_CLIENT_SECRET', '').strip()
 
-    if not all([client_id, client_secret, refresh_token]):
-        return "Spotify Fehler: Secrets (ID, Secret oder Refresh Token) fehlen."
+    if not client_id or not client_secret:
+        return "Spotify Fehler: Client ID oder Secret fehlt."
 
     try:
-        # Auth-Manager Konfiguration
-        auth_manager = SpotifyOAuth(
+        auth_manager = SpotifyClientCredentials(
             client_id=client_id,
-            client_secret=client_secret,
-            redirect_uri="https://www.google.com/"
+            client_secret=client_secret
         )
+        sp = spotipy.Spotify(auth_manager=auth_manager)
         
-        # Token mit dem Refresh-Token erneuern
-        token_info = auth_manager.refresh_access_token(refresh_token)
-        sp = spotipy.Spotify(auth=token_info['access_token'])
-        
-        output = ["\n=== 3. SPOTIFY NEW (TOP 10 JE PLAYLIST) ==="]
+        output = ["\n=== 3. SPOTIFY NEW (ÖFFENTLICH) ==="]
         
         for name, p_id in playlists.items():
             output.append(f"\n--- NEW: {name} ---")
             try:
-                results = sp.playlist_items(
+                results = sp.playlist_tracks(
                     p_id, 
-                    limit=10, 
                     fields='items(track(name,artists(name)))',
-                    additional_types=['track']
+                    limit=10
                 )
                 
                 for item in results.get('items', []):
@@ -49,13 +42,13 @@ def fetch_spotify_group(playlists):
                         artist = track['artists'][0]['name']
                         title = track['name']
                         output.append(f"{artist} - {title}")
-            except Exception as playlist_error:
-                output.append(f"Fehler bei dieser Playlist: {str(playlist_error)}")
+            except Exception as e:
+                output.append(f"Zugriff nicht möglich: {str(e)}")
                 
         return "\n".join(output)
 
     except Exception as e:
-        return f"\nKritischer Spotify Fehler (New): {str(e)}"
+        return f"\nKritischer Auth-Fehler (New): {str(e)}"
 
 if __name__ == "__main__":
     content = fetch_spotify_group(NEW_PLAYLISTS)
