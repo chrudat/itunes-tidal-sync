@@ -14,10 +14,19 @@ FAV_PLAYLISTS = {
 def fetch_spotify_group(playlists):
     client_id = os.environ.get('SPOTIPY_CLIENT_ID')
     client_secret = os.environ.get('SPOTIPY_CLIENT_SECRET')
-    if not client_id or not client_secret: return "Spotify Credentials fehlen."
+    refresh_token = os.environ.get('SPOTIPY_REFRESH_TOKEN')
 
-    auth_manager = SpotifyClientCredentials(client_id=client_id, client_secret=client_secret)
-    sp = spotipy.Spotify(auth_manager=auth_manager)
+    if not all([client_id, client_secret, refresh_token]):
+        return "Spotify Fehler: Secrets (ID, Secret oder Refresh Token) fehlen."
+
+    try:
+        auth_manager = SpotifyOAuth(
+            client_id=client_id,
+            client_secret=client_secret,
+            refresh_token=refresh_token,
+            redirect_uri="https://www.google.com/"
+        )
+        sp = spotipy.Spotify(auth_manager=auth_manager)
     
     output = ["\n=== 2. SPOTIFY FAVORITEN (TOP 10 JE PLAYLIST) ==="]
     for name, p_id in playlists.items():
