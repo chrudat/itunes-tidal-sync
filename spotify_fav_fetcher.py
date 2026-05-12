@@ -1,8 +1,8 @@
 import os
 import spotipy
-from spotipy.oauth2 import SpotifyOAuth
+from spotipy.oauth2 import SpotifyClientCredentials
 
-# Hier deine 5 Standard Spotify Playlists eintragen
+# Die IDs fremder, öffentlicher Playlists
 FAV_PLAYLISTS = {
     "Favoriten 1": "2wfH0TtehyBpTV5M4xkDRd",
     "Favoriten 2": "1iClTzJkt8IrUN82hqAMrF",
@@ -12,36 +12,31 @@ FAV_PLAYLISTS = {
 }
 
 def fetch_spotify_group(playlists):
-    client_id = os.environ.get('SPOTIPY_CLIENT_ID')
-    client_secret = os.environ.get('SPOTIPY_CLIENT_SECRET')
-    refresh_token = os.environ.get('SPOTIPY_REFRESH_TOKEN')
+    # .strip() entfernt versehentliche Leerzeichen aus den GitHub Secrets
+    client_id = os.environ.get('SPOTIPY_CLIENT_ID', '').strip()
+    client_secret = os.environ.get('SPOTIPY_CLIENT_SECRET', '').strip()
 
-    if not all([client_id, client_secret, refresh_token]):
-        return "Spotify Fehler: Secrets (ID, Secret oder Refresh Token) fehlen."
+    if not client_id or not client_secret:
+        return "Spotify Fehler: Client ID oder Secret fehlt in den GitHub Secrets."
 
     try:
-        # Auth-Manager Konfiguration
-        auth_manager = SpotifyOAuth(
+        # App-only Auth: Ideal für öffentliche, fremde Daten
+        auth_manager = SpotifyClientCredentials(
             client_id=client_id,
-            client_secret=client_secret,
-            redirect_uri="https://www.google.com/"
+            client_secret=client_secret
         )
+        sp = spotipy.Spotify(auth_manager=auth_manager)
         
-        # Token mit dem Refresh-Token erneuern
-        token_info = auth_manager.refresh_access_token(refresh_token)
-        sp = spotipy.Spotify(auth=token_info['access_token'])
-        
-        output = ["\n=== 2. SPOTIFY FAVORITEN (TOP 10 JE PLAYLIST) ==="]
+        output = ["\n=== 2. SPOTIFY FAVORITEN (ÖFFENTLICH) ==="]
         
         for name, p_id in playlists.items():
             output.append(f"\n--- {name} ---")
             try:
-                # playlist_items ist die sicherste Methode für öffentliche Playlists
-                results = sp.playlist_items(
+                # playlist_tracks ist die robusteste Methode für fremde Listen
+                results = sp.playlist_tracks(
                     p_id, 
-                    limit=10, 
                     fields='items(track(name,artists(name)))',
-                    additional_types=['track']
+                    limit=10
                 )
                 
                 for item in results.get('items', []):
@@ -50,13 +45,17 @@ def fetch_spotify_group(playlists):
                         artist = track['artists'][0]['name']
                         title = track['name']
                         output.append(f"{artist} - {title}")
-            except Exception as playlist_error:
-                output.append(f"Fehler bei dieser Playlist: {str(playlist_error)}")
+                
+                if not results.get('items'):
+                    output.append("Keine Tracks gefunden oder Playlist ist leer.")
+                    
+            except Exception as e:
+                output.append(f"Zugriff nicht möglich: {str(e)}")
                 
         return "\n".join(output)
 
     except Exception as e:
-        return f"\nKritischer Spotify Fehler (Fav): {str(e)}"
+        return f"\nKritischer Auth-Fehler (Fav): {str(e)}"
 
 if __name__ == "__main__":
     content = fetch_spotify_group(FAV_PLAYLISTS)
