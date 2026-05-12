@@ -47,6 +47,6 @@ jobs:
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
           subject: "🎵 Musik-Update: iTunes, Favs & New"
-          to: "DEINE_ZIEL_EMAIL@BEISPIEL.DE"
+          to: "sutadur@gmail.com"
           from: "GitHub Music Bot"
           body: file://final_mail.txt
