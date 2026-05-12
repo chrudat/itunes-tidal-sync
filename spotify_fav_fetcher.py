@@ -24,7 +24,8 @@ def fetch_spotify_group(playlists):
         auth_manager = SpotifyOAuth(
             client_id=client_id,
             client_secret=client_secret,
-            redirect_uri="https://www.google.com/"
+            redirect_uri="https://www.google.com/",
+            scope="playlist-read-private" # Stelle sicher, dass dies hier steht
         )
         
         # Hier "füttern" wir den Manager manuell mit deinem Refresh Token
