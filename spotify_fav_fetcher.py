@@ -4,11 +4,11 @@ from spotipy.oauth2 import SpotifyClientCredentials
 
 # Hier deine 5 Standard Spotify Playlists eintragen
 FAV_PLAYLISTS = {
-    "Favoriten 1": "ID_HIER_EINTRAGEN",
-    "Favoriten 2": "ID_HIER_EINTRAGEN",
-    "Favoriten 3": "ID_HIER_EINTRAGEN",
-    "Favoriten 4": "ID_HIER_EINTRAGEN",
-    "Favoriten 5": "ID_HIER_EINTRAGEN"
+    "Favoriten 1": "2wfH0TtehyBpTV5M4xkDRd",
+    "Favoriten 2": "1iClTzJkt8IrUN82hqAMrF",
+    "Favoriten 3": "1NCSSZD24g2MYEaV1eZ8x4",
+    "Favoriten 4": "1Ek02NSuK1YAgctMwBnXAF",
+    "Favoriten 5": "4FHKFYziOZF75AkT3aR7QP"
 }
 
 def fetch_spotify_group(playlists):
