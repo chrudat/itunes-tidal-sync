@@ -20,19 +20,18 @@ def fetch_spotify_group(playlists):
         return "Spotify Fehler: Secrets fehlen."
 
     try:
-        # 1. Authentifizierung vorbereiten
+        # Wir nutzen den auth_manager, um mit dem Refresh Token ein neues Access Token zu generieren
         auth_manager = SpotifyOAuth(
             client_id=client_id,
             client_secret=client_secret,
-            refresh_token=refresh_token,
             redirect_uri="https://www.google.com/"
         )
-        sp = spotipy.Spotify(auth_manager=auth_manager)
         
-        # 2. Die Liste vorbereiten (DAS MUSS HIER STEHEN)
+        # Hier "füttern" wir den Manager manuell mit deinem Refresh Token
+        token_info = auth_manager.refresh_access_token(refresh_token)
+        sp = spotipy.Spotify(auth=token_info['access_token'])
+        
         output = ["\n=== SPOTIFY ABFRAGE AKTIVIERT ==="]
-        
-        # 3. Playlisten abrufen
         for name, p_id in playlists.items():
             output.append(f"\n--- {name} ---")
             results = sp.playlist_items(p_id, limit=10, fields='items(track(name,artists(name)))')
