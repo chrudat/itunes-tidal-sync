@@ -11,42 +11,31 @@ NEW_PLAYLISTS = {
     "New Releases 5": "0HoiaN3OGkIZLJc7OhcCaG"
 }
 
+from spotipy.oauth2 import SpotifyClientCredentials
+
 def fetch_spotify_group(playlists):
     client_id = os.environ.get('SPOTIPY_CLIENT_ID')
     client_secret = os.environ.get('SPOTIPY_CLIENT_SECRET')
-    refresh_token = os.environ.get('SPOTIPY_REFRESH_TOKEN')
-
-    if not all([client_id, client_secret, refresh_token]):
-        return "Spotify Fehler: Secrets fehlen."
 
     try:
-        # Wir nutzen den auth_manager, um mit dem Refresh Token ein neues Access Token zu generieren
-        auth_manager = SpotifyOAuth(
+        # Wir verzichten auf den User-Token und gehen den offiziellen Weg für öffentliche Daten
+        auth_manager = SpotifyClientCredentials(
             client_id=client_id,
-            client_secret=client_secret,
-            redirect_uri="https://www.google.com/"
-            # Scope komplett weglassen für maximale Kompatibilität mit öffentlichen Daten
+            client_secret=client_secret
         )
+        sp = spotipy.Spotify(auth_manager=auth_manager)
         
-        token_info = auth_manager.refresh_access_token(refresh_token)
-        sp = spotipy.Spotify(auth=token_info['access_token'])
-        
-        # Hier "füttern" wir den Manager manuell mit deinem Refresh Token
-        token_info = auth_manager.refresh_access_token(refresh_token)
-        sp = spotipy.Spotify(auth=token_info['access_token'])
-        
-        output = ["\n=== SPOTIFY ABFRAGE AKTIVIERT ==="]
+        output = ["\n=== SPOTIFY DATEN ==="]
         for name, p_id in playlists.items():
             output.append(f"\n--- {name} ---")
-            results = sp.playlist_items(p_id, limit=10, fields='items(track(name,artists(name)))')
+            # Wir nutzen hier eine robustere Abfrage
+            results = sp.playlist_tracks(p_id, limit=10, fields='items(track(name,artists(name)))')
             for item in results['items']:
-                track = item['track']
-                if track:
-                    artist = track['artists'][0]['name']
-                    title = track['name']
+                if item['track']:
+                    artist = item['track']['artists'][0]['name']
+                    title = item['track']['name']
                     output.append(f"{artist} - {title}")
         return "\n".join(output)
-
     except Exception as e:
         return f"\nSpotify Fehler: {str(e)}"
         
