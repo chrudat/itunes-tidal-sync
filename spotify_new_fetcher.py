@@ -4,11 +4,11 @@ from spotipy.oauth2 import SpotifyClientCredentials
 
 # Hier deine 5 "New" Spotify Playlists eintragen (z.B. Release Radar, New Music Friday)
 NEW_PLAYLISTS = {
-    "New Releases 1": "ID_HIER_EINTRAGEN",
-    "New Releases 2": "ID_HIER_EINTRAGEN",
-    "New Releases 3": "ID_HIER_EINTRAGEN",
-    "New Releases 4": "ID_HIER_EINTRAGEN",
-    "New Releases 5": "ID_HIER_EINTRAGEN"
+    "New Releases 1": "63oguNCuwz51He8oxXdP58",
+    "New Releases 2": "15IEm4WquzW48cFgtb7Ym7",
+    "New Releases 3": "4JcT11QpxN0GoOsRmAvJLm",
+    "New Releases 4": "2Ohyls4WAtQSitMMhtBgkd",
+    "New Releases 5": "0HoiaN3OGkIZLJc7OhcCaG"
 }
 
 def fetch_spotify_group(playlists):
