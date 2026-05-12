@@ -1,6 +1,6 @@
 import os
 import spotipy
-from spotipy.oauth2 import SpotifyClientCredentials
+from spotipy.oauth2 import SpotifyOAuth
 
 # Hier deine 5 Standard Spotify Playlists eintragen
 FAV_PLAYLISTS = {
