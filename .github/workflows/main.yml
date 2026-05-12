@@ -1,11 +1,10 @@
-name: Weekly iTunes Email
+name: Weekly Music Update
 
 on:
   schedule:
     - cron: '0 8 * * 1'
   workflow_dispatch:
 
-# Diese Variable stellt sicher, dass GitHub den neuesten Motor (Node 24) nutzt
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -21,21 +20,33 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install Requests
-        run: pip install requests
+      - name: Install Dependencies
+        run: pip install requests spotipy
 
-      - name: Generate Charts File
-        run: python update_charts.py
+      - name: Fetch All Data
+        env:
+          SPOTIPY_CLIENT_ID: ${{ secrets.SPOTIPY_CLIENT_ID }}
+          SPOTIPY_CLIENT_SECRET: ${{ secrets.SPOTIPY_CLIENT_SECRET }}
+        run: |
+          python itunes_fetcher.py
+          python spotify_fav_fetcher.py
+          python spotify_new_fetcher.py
+          
+          # Zusammenfügen der E-Mail
+          echo "DEIN MUSIK-UPDATE VOM $(date +'%d.%m.%Y')" > final_mail.txt
+          echo "=======================================" >> final_mail.txt
+          cat part_itunes.txt >> final_mail.txt
+          cat part_spotify_fav.txt >> final_mail.txt
+          cat part_spotify_new.txt >> final_mail.txt
 
       - name: Send Mail
-        # Hier nutzen wir v4 statt v3 für bessere Kompatibilität
         uses: dawidd6/action-send-mail@v4
         with:
           server_address: ${{ secrets.MAIL_SERVER }}
           server_port: 465
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          subject: "🎵 Deine iTunes Top 10 Charts"
-          to: "sutadur@gmail.com"
-          from: "GitHub Chart Bot"
-          body: file://charts.txt
+          subject: "🎵 Musik-Update: iTunes, Favs & New"
+          to: "DEINE_ZIEL_EMAIL@BEISPIEL.DE"
+          from: "GitHub Music Bot"
+          body: file://final_mail.txt
