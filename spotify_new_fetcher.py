@@ -20,6 +20,7 @@ def fetch_spotify_group(playlists):
         return "Spotify Fehler: Secrets fehlen."
 
     try:
+        # 1. Authentifizierung vorbereiten
         auth_manager = SpotifyOAuth(
             client_id=client_id,
             client_secret=client_secret,
@@ -27,19 +28,25 @@ def fetch_spotify_group(playlists):
             redirect_uri="https://www.google.com/"
         )
         sp = spotipy.Spotify(auth_manager=auth_manager)
-    
-    output = ["\n=== 3. SPOTIFY NEW (TOP 10 JE PLAYLIST) ==="]
-    for name, p_id in playlists.items():
-        output.append(f"\n--- NEW: {name} ---")
-        try:
+        
+        # 2. Die Liste vorbereiten (DAS MUSS HIER STEHEN)
+        output = ["\n=== SPOTIFY ABFRAGE AKTIVIERT ==="]
+        
+        # 3. Playlisten abrufen
+        for name, p_id in playlists.items():
+            output.append(f"\n--- {name} ---")
             results = sp.playlist_items(p_id, limit=10, fields='items(track(name,artists(name)))')
             for item in results['items']:
                 track = item['track']
-                output.append(f"{track['artists'][0]['name']} - {track['name']}")
-        except Exception as e:
-            output.append(f"Fehler bei {name}: {e}")
-    return "\n".join(output)
+                if track:
+                    artist = track['artists'][0]['name']
+                    title = track['name']
+                    output.append(f"{artist} - {title}")
+        return "\n".join(output)
 
+    except Exception as e:
+        return f"\nSpotify Fehler: {str(e)}"
+        
 if __name__ == "__main__":
     content = fetch_spotify_group(NEW_PLAYLISTS)
     with open("part_spotify_new.txt", "w", encoding="utf-8") as f:
