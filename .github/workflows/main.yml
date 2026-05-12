@@ -49,7 +49,7 @@ jobs:
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
           subject: "🎵 Dein großes Musik-Update"
-          to: "DEINE_EMAIL@ADRESSE.DE"
+          to: "sutadur@gmail.com"
           from: "GitHub Music Bot"
           body: file://final_mail.txt          echo "=======================================" >> final_mail.txt
           cat part_itunes.txt >> final_mail.txt
